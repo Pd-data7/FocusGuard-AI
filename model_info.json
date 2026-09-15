@@ -1,0 +1,9 @@
+{
+    "model_name": "Linear Regression",
+    "mae": 0.16436104012537986,
+    "rmse": 0.2055711314258443,
+    "r2": 0.5473647591731503,
+    "training_samples": 1600,
+    "testing_samples": 400,
+    "target": "GPA"
+}
