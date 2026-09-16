@@ -1,11 +1,11 @@
 # ============================================================
 # FOCUSGUARD AI
 # Student Performance Intelligence System
+# Stable Streamlit Version
 # ============================================================
 
 from pathlib import Path
 import json
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -14,7 +14,7 @@ import streamlit as st
 
 
 # ============================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -26,246 +26,70 @@ st.set_page_config(
 
 
 # ============================================================
-# FILE PATHS
+# PATHS
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
+
 MODEL_PATH = BASE_DIR / "focusguard_gpa_model.pkl"
 DATA_PATH = BASE_DIR / "student_productivity.csv"
 INFO_PATH = BASE_DIR / "model_info.json"
 
 
 # ============================================================
-# CUSTOM CSS
-# IMPORTANT:
-# The card HTML below intentionally has NO blank lines between
-# nested HTML elements. This prevents Streamlit Markdown from
-# displaying inner HTML tags as literal text.
+# GLOBAL CSS
 # ============================================================
 
 st.markdown(
     """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    <style>
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-.stApp {
-    background:
-        radial-gradient(circle at 10% 10%, rgba(99,102,241,0.16), transparent 28%),
-        radial-gradient(circle at 90% 10%, rgba(168,85,247,0.14), transparent 25%),
-        #070914;
-    color: #f8fafc;
-}
-
-.block-container {
-    padding-top: 1.3rem;
-    padding-bottom: 4rem;
-    max-width: 1450px;
-}
-
-[data-testid="stSidebar"] {
-    background: rgba(8, 10, 24, 0.98);
-    border-right: 1px solid rgba(255,255,255,0.08);
-}
-
-.hero-title {
-    font-size: 2.15rem;
-    font-weight: 800;
-    letter-spacing: -1.3px;
-    line-height: 1.1;
-    margin-bottom: 0.25rem;
-}
-
-.gradient-text {
-    background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-    color: #94a3b8;
-    font-size: 0.88rem;
-    line-height: 1.5;
-    margin-bottom: 1.2rem;
-}
-
-.glass-card {
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 22px;
-    padding: 1.5rem;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 15px 50px rgba(0,0,0,0.25);
-    height: 100%;
-    box-sizing: border-box;
-}
-
-.kpi-label {
-    color: #94a3b8;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-}
-
-.kpi-value {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-top: 0.4rem;
-}
-
-.section-title {
-    font-size: 1.35rem;
-    font-weight: 750;
-    margin-top: 1.8rem;
-    margin-bottom: 1rem;
-}
-
-.prediction-box {
-    background: linear-gradient(135deg, rgba(99,102,241,0.17), rgba(168,85,247,0.10));
-    border: 1px solid rgba(129,140,248,0.35);
-    border-radius: 26px;
-    padding: 1.8rem;
-    text-align: center;
-    box-shadow: 0 20px 70px rgba(79,70,229,0.14);
-    min-height: 290px;
-    box-sizing: border-box;
-}
-
-.prediction-value {
-    font-size: 4.2rem;
-    font-weight: 800;
-    background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.insight-card {
-    background: rgba(129,140,248,0.07);
-    border: 1px solid rgba(129,140,248,0.20);
-    border-radius: 18px;
-    padding: 1.25rem;
-    margin-bottom: 0.7rem;
-}
-
-.improvement-card {
-    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.05));
-    border: 1px solid rgba(129,140,248,0.18);
-    border-radius: 18px;
-    padding: 1.25rem;
-    margin-bottom: 0.8rem;
-}
-
-.improvement-title {
-    font-size: 1rem;
-    font-weight: 750;
-    margin-bottom: 0.35rem;
-}
-
-.improvement-text {
-    color: #94a3b8;
-    line-height: 1.65;
-    font-size: 0.9rem;
-}
-
-.day-number {
-    color: #a5b4fc;
-    font-weight: 800;
-    font-size: 0.9rem;
-}
-
-.day-title {
-    font-weight: 750;
-    font-size: 0.95rem;
-}
-
-.day-description {
-    color: #94a3b8;
-    font-size: 0.85rem;
-    margin-top: 3px;
-}
-
-.stButton > button {
-    width: 100%;
-    border-radius: 13px;
-    border: 1px solid rgba(129,140,248,0.3);
-    background: linear-gradient(90deg, #4f46e5, #7c3aed);
-    color: white;
-    font-weight: 700;
-    padding: 0.75rem;
-    transition: 0.2s;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px);
-}
-
-.footer {
-    text-align: center;
-    color: #64748b;
-    padding-top: 3rem;
-    font-size: 0.8rem;
-}
-
-hr {
-    border-color: rgba(255,255,255,0.08);
-}
-
-[data-testid="stMetric"] {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 14px;
-    padding: 0.8rem;
-}
-
-@media (max-width: 900px) {
-    .hero-title {
-        font-size: 1.8rem;
+    .stApp {
+        background:
+            radial-gradient(
+                circle at 10% 10%,
+                rgba(99,102,241,0.14),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 90% 10%,
+                rgba(168,85,247,0.12),
+                transparent 28%
+            ),
+            #070914;
     }
 
-    .prediction-value {
-        font-size: 3.3rem;
+    .block-container {
+        padding-top: 2.5rem !important;
+        padding-bottom: 4rem !important;
+        max-width: 1450px;
     }
-}
-</style>
-""",
+
+    section[data-testid="stSidebar"] {
+        background: #090b18;
+    }
+
+    h1, h2, h3 {
+        letter-spacing: -0.5px;
+    }
+
+    [data-testid="stMetric"] {
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .stButton > button {
+        width: 100%;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+    </style>
+    """,
     unsafe_allow_html=True,
 )
-
-
-# ============================================================
-# SMALL HTML HELPERS
-# ============================================================
-
-def render_card(title, value, value_style=""):
-    st.markdown(
-        f'<div class="glass-card"><div class="kpi-label">{title}</div><div class="kpi-value" style="{value_style}">{value}</div></div>',
-        unsafe_allow_html=True,
-    )
-
-
-def render_flow_card(icon, title, description):
-    st.markdown(
-        f'<div class="glass-card"><div style="font-size:1.8rem;margin-bottom:.55rem">{icon}</div><div style="font-weight:750;font-size:1rem">{title}</div><p style="color:#94a3b8;line-height:1.55">{description}</p></div>',
-        unsafe_allow_html=True,
-    )
-
-
-def render_insight(text):
-    st.markdown(
-        f'<div class="insight-card">{text}</div>',
-        unsafe_allow_html=True,
-    )
-
-
-def render_improvement(icon, title, text):
-    st.markdown(
-        f'<div class="improvement-card"><div class="improvement-title">{icon} {title}</div><div class="improvement-text">{text}</div></div>',
-        unsafe_allow_html=True,
-    )
 
 
 # ============================================================
@@ -274,17 +98,21 @@ def render_improvement(icon, title, text):
 
 @st.cache_resource
 def load_model():
+
     if not MODEL_PATH.exists():
         st.error(
-            "❌ focusguard_gpa_model.pkl was not found.\n\n"
-            f"Expected location:\n{MODEL_PATH}"
+            f"Model file not found:\n\n{MODEL_PATH}"
         )
         st.stop()
 
     try:
         return joblib.load(MODEL_PATH)
-    except Exception as exc:
-        st.error(f"❌ Unable to load the ML model.\n\n{exc}")
+
+    except Exception as e:
+        st.error(
+            "Unable to load the ML model.\n\n"
+            f"Error: {e}"
+        )
         st.stop()
 
 
@@ -294,17 +122,21 @@ def load_model():
 
 @st.cache_data
 def load_data():
+
     if not DATA_PATH.exists():
         st.error(
-            "❌ student_productivity.csv was not found.\n\n"
-            f"Expected location:\n{DATA_PATH}"
+            f"Dataset file not found:\n\n{DATA_PATH}"
         )
         st.stop()
 
     try:
         return pd.read_csv(DATA_PATH)
-    except Exception as exc:
-        st.error(f"❌ Unable to load the dataset.\n\n{exc}")
+
+    except Exception as e:
+        st.error(
+            "Unable to read dataset.\n\n"
+            f"Error: {e}"
+        )
         st.stop()
 
 
@@ -314,6 +146,7 @@ def load_data():
 
 @st.cache_data
 def load_model_info():
+
     default_info = {
         "model_name": "Unknown",
         "mae": 0,
@@ -328,12 +161,27 @@ def load_model_info():
         return default_info
 
     try:
-        with open(INFO_PATH, "r", encoding="utf-8") as file:
-            data = json.load(file)
-        return {**default_info, **data}
+
+        with open(
+            INFO_PATH,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            info = json.load(file)
+
+        return {
+            **default_info,
+            **info
+        }
+
     except Exception:
         return default_info
 
+
+# ============================================================
+# INITIALIZE
+# ============================================================
 
 model = load_model()
 df = load_data()
@@ -341,10 +189,10 @@ model_info = load_model_info()
 
 
 # ============================================================
-# DATA VALIDATION
+# REQUIRED DATASET COLUMNS
 # ============================================================
 
-required_columns = [
+REQUIRED_COLUMNS = [
     "Study_Hours_Per_Day",
     "Extracurricular_Hours_Per_Day",
     "Sleep_Hours_Per_Day",
@@ -354,132 +202,470 @@ required_columns = [
     "GPA",
 ]
 
-missing_columns = [col for col in required_columns if col not in df.columns]
+
+missing_columns = [
+    column
+    for column in REQUIRED_COLUMNS
+    if column not in df.columns
+]
+
 
 if missing_columns:
+
     st.error(
-        "❌ Dataset is missing required columns: "
+        "Dataset is missing these columns:\n\n"
         + ", ".join(missing_columns)
     )
+
     st.stop()
 
 
 # ============================================================
-# HELPERS
+# MODEL FEATURES
 # ============================================================
 
-def total_daily_hours(study, extra, sleep, social, physical):
-    return float(study + extra + sleep + social + physical)
+FEATURE_COLUMNS = [
+    "Study_Hours_Per_Day",
+    "Extracurricular_Hours_Per_Day",
+    "Sleep_Hours_Per_Day",
+    "Social_Hours_Per_Day",
+    "Physical_Activity_Hours_Per_Day",
+    "Stress_Level",
+    "Total_Tracked_Hours",
+    "Productive_Hours_Per_Day",
+    "Free_Time_Per_Day",
+]
 
 
-def build_input_dataframe(study, extra, sleep, social, physical, stress):
-    total_hours = total_daily_hours(
-        study, extra, sleep, social, physical
+# ============================================================
+# GPA SCALE
+# ============================================================
+
+dataset_gpa_max = float(df["GPA"].max())
+
+if dataset_gpa_max <= 4.5:
+    GPA_SCALE_MAX = 4.0
+else:
+    GPA_SCALE_MAX = 10.0
+
+
+# ============================================================
+# STRESS OPTIONS
+# IMPORTANT:
+# The trained model uses Stress_Level as a categorical feature.
+# Therefore we MUST pass text such as Low / Medium / High.
+# ============================================================
+
+def get_stress_options():
+
+    try:
+
+        if hasattr(model, "named_steps"):
+
+            if "preprocessor" in model.named_steps:
+
+                preprocessor = model.named_steps["preprocessor"]
+
+                if hasattr(
+                    preprocessor,
+                    "transformers_"
+                ):
+
+                    for (
+                        name,
+                        transformer,
+                        columns
+                    ) in preprocessor.transformers_:
+
+                        if name == "categorical":
+
+                            if hasattr(
+                                transformer,
+                                "categories_"
+                            ):
+
+                                categories = (
+                                    transformer.categories_[0]
+                                )
+
+                                options = [
+                                    str(x)
+                                    for x in categories
+                                ]
+
+                                if options:
+                                    return options
+
+    except Exception:
+        pass
+
+    return [
+        "Low",
+        "Medium",
+        "High"
+    ]
+
+
+STRESS_OPTIONS = get_stress_options()
+
+
+# ============================================================
+# TOTAL DAILY HOURS
+# ============================================================
+
+def total_daily_hours(
+    study,
+    extra,
+    sleep,
+    social,
+    physical
+):
+
+    return (
+        float(study)
+        + float(extra)
+        + float(sleep)
+        + float(social)
+        + float(physical)
     )
 
-    productive_hours = study + extra
-    free_time = 24 - total_hours
+
+# ============================================================
+# BUILD MODEL INPUT
+# ============================================================
+
+def build_input_dataframe(
+    study,
+    extra,
+    sleep,
+    social,
+    physical,
+    stress
+):
+
+    study = float(study)
+    extra = float(extra)
+    sleep = float(sleep)
+    social = float(social)
+    physical = float(physical)
+
+    total = total_daily_hours(
+        study,
+        extra,
+        sleep,
+        social,
+        physical
+    )
+
+    productive = study + extra
+
+    free_time = 24.0 - total
+
+    data = {
+        "Study_Hours_Per_Day": study,
+        "Extracurricular_Hours_Per_Day": extra,
+        "Sleep_Hours_Per_Day": sleep,
+        "Social_Hours_Per_Day": social,
+        "Physical_Activity_Hours_Per_Day": physical,
+
+        # IMPORTANT:
+        # Keep Stress_Level as STRING.
+        "Stress_Level": str(stress).strip(),
+
+        "Total_Tracked_Hours": total,
+        "Productive_Hours_Per_Day": productive,
+        "Free_Time_Per_Day": free_time,
+    }
 
     return pd.DataFrame(
-        {
-            "Study_Hours_Per_Day": [study],
-            "Extracurricular_Hours_Per_Day": [extra],
-            "Sleep_Hours_Per_Day": [sleep],
-            "Social_Hours_Per_Day": [social],
-            "Physical_Activity_Hours_Per_Day": [physical],
-            "Stress_Level": [stress],
-            "Total_Tracked_Hours": [total_hours],
-            "Productive_Hours_Per_Day": [productive_hours],
-            "Free_Time_Per_Day": [free_time],
-        }
+        [data],
+        columns=FEATURE_COLUMNS
     )
 
 
-def predict_gpa(study, extra, sleep, social, physical, stress):
+# ============================================================
+# PREDICTION
+# ============================================================
+
+def predict_gpa(
+    study,
+    extra,
+    sleep,
+    social,
+    physical,
+    stress
+):
+
+    values = [
+        study,
+        extra,
+        sleep,
+        social,
+        physical
+    ]
+
+    # --------------------------------------------------------
+    # Validate negative values
+    # --------------------------------------------------------
+
+    if any(float(x) < 0 for x in values):
+
+        raise ValueError(
+            "Hours cannot be negative."
+        )
+
+
+    # --------------------------------------------------------
+    # Validate 24-hour day
+    # --------------------------------------------------------
+
     total_hours = total_daily_hours(
-        study, extra, sleep, social, physical
+        study,
+        extra,
+        sleep,
+        social,
+        physical
     )
 
     if total_hours > 24:
+
         raise ValueError(
-            f"Daily routine exceeds 24 hours: {total_hours:.1f} hours."
+            f"Your daily hours are "
+            f"{total_hours:.1f}. "
+            "They cannot exceed 24 hours."
         )
 
-    if min(study, extra, sleep, social, physical) < 0:
-        raise ValueError("Daily hours cannot be negative.")
+
+    # --------------------------------------------------------
+    # IMPORTANT:
+    # Do NOT convert Low/Medium/High to 1/2/3.
+    # The trained model uses OneHotEncoder.
+    # --------------------------------------------------------
 
     input_data = build_input_dataframe(
-        study, extra, sleep, social, physical, stress
+        study,
+        extra,
+        sleep,
+        social,
+        physical,
+        stress
     )
 
+
+    # --------------------------------------------------------
+    # Prediction
+    # --------------------------------------------------------
+
     try:
+
         prediction = model.predict(input_data)
-    except Exception as exc:
+
+    except Exception as e:
+
         raise RuntimeError(
-            "The input features do not match the trained model.\n\n"
-            "This app supplies these 9 features:\n"
-            "Study_Hours_Per_Day, Extracurricular_Hours_Per_Day, "
-            "Sleep_Hours_Per_Day, Social_Hours_Per_Day, "
-            "Physical_Activity_Hours_Per_Day, Stress_Level, "
-            "Total_Tracked_Hours, Productive_Hours_Per_Day, "
-            "Free_Time_Per_Day.\n\n"
-            f"Technical error: {exc}"
-        ) from exc
+            "Model prediction failed.\n\n"
+            f"Technical error: {e}\n\n"
+            "Make sure the .pkl model and app.py "
+            "belong to the same trained version."
+        )
 
-    prediction = float(np.asarray(prediction).ravel()[0])
-    return float(np.clip(prediction, 0, 10))
 
+    prediction = float(
+        np.asarray(prediction)
+        .flatten()[0]
+    )
+
+
+    # --------------------------------------------------------
+    # Keep prediction inside the valid GPA scale.
+    # --------------------------------------------------------
+
+    prediction = max(
+        0.0,
+        min(
+            prediction,
+            GPA_SCALE_MAX
+        )
+    )
+
+    return prediction
+
+
+# ============================================================
+# GPA STATUS
+# ============================================================
 
 def get_status(gpa):
-    if gpa >= 8.5:
-        return "Excellent Academic Profile", "🟢"
-    if gpa >= 7.0:
-        return "Strong Academic Profile", "🔵"
-    if gpa >= 5.5:
-        return "Improvement Opportunity", "🟡"
-    return "Needs Attention", "🔴"
 
+    if GPA_SCALE_MAX == 4.0:
+
+        if gpa >= 3.5:
+            return "Excellent Academic Profile", "🟢"
+
+        elif gpa >= 3.0:
+            return "Strong Academic Profile", "🔵"
+
+        elif gpa >= 2.0:
+            return "Improvement Opportunity", "🟡"
+
+        else:
+            return "Needs Attention", "🔴"
+
+    else:
+
+        if gpa >= 8.5:
+            return "Excellent Academic Profile", "🟢"
+
+        elif gpa >= 7.0:
+            return "Strong Academic Profile", "🔵"
+
+        elif gpa >= 5.5:
+            return "Improvement Opportunity", "🟡"
+
+        else:
+            return "Needs Attention", "🔴"
+
+
+# ============================================================
+# GPA GAUGE
+# ============================================================
 
 def create_gauge(gpa):
+
     fig = go.Figure(
+
         go.Indicator(
+
             mode="gauge+number",
+
             value=gpa,
-            number={"font": {"size": 48}, "suffix": " / 10"},
-            title={"text": "Predicted GPA"},
-            gauge={
-                "axis": {"range": [0, 10]},
-                "bar": {"thickness": 0.75},
-                "steps": [
-                    {"range": [0, 5.5]},
-                    {"range": [5.5, 7]},
-                    {"range": [7, 8.5]},
-                    {"range": [8.5, 10]},
-                ],
-                "threshold": {
-                    "line": {"width": 4},
-                    "thickness": 0.8,
-                    "value": gpa,
+
+            number={
+                "font": {
+                    "size": 42
                 },
+                "suffix": f" / {GPA_SCALE_MAX:g}"
             },
+
+            title={
+                "text": "Predicted GPA"
+            },
+
+            gauge={
+
+                "axis": {
+                    "range": [
+                        0,
+                        GPA_SCALE_MAX
+                    ]
+                },
+
+                "bar": {
+                    "thickness": 0.7
+                },
+
+                "steps": [
+
+                    {
+                        "range": [
+                            0,
+                            GPA_SCALE_MAX * 0.55
+                        ]
+                    },
+
+                    {
+                        "range": [
+                            GPA_SCALE_MAX * 0.55,
+                            GPA_SCALE_MAX * 0.70
+                        ]
+                    },
+
+                    {
+                        "range": [
+                            GPA_SCALE_MAX * 0.70,
+                            GPA_SCALE_MAX * 0.85
+                        ]
+                    },
+
+                    {
+                        "range": [
+                            GPA_SCALE_MAX * 0.85,
+                            GPA_SCALE_MAX
+                        ]
+                    }
+
+                ],
+
+                "threshold": {
+
+                    "line": {
+                        "width": 4
+                    },
+
+                    "thickness": 0.8,
+
+                    "value": gpa
+                }
+            }
         )
     )
 
     fig.update_layout(
+
         template="plotly_dark",
-        height=330,
-        margin={"l": 20, "r": 20, "t": 60, "b": 20},
+
+        height=350,
+
+        margin={
+            "l": 20,
+            "r": 20,
+            "t": 70,
+            "b": 20
+        }
     )
+
     return fig
 
 
-def create_radar(study, sleep, social, physical, extra):
+# ============================================================
+# ROUTINE RADAR
+# ============================================================
+
+def create_radar(
+    study,
+    sleep,
+    social,
+    physical,
+    extra
+):
+
     values = [
-        min(study / 12 * 100, 100),
-        min(sleep / 12 * 100, 100),
-        min(social / 10 * 100, 100),
-        min(physical / 8 * 100, 100),
-        min(extra / 8 * 100, 100),
+
+        min(
+            study / 12 * 100,
+            100
+        ),
+
+        min(
+            sleep / 12 * 100,
+            100
+        ),
+
+        min(
+            social / 10 * 100,
+            100
+        ),
+
+        min(
+            physical / 8 * 100,
+            100
+        ),
+
+        min(
+            extra / 8 * 100,
+            100
+        )
+
     ]
 
     categories = [
@@ -487,257 +673,364 @@ def create_radar(study, sleep, social, physical, extra):
         "Sleep",
         "Social",
         "Physical Activity",
-        "Extracurricular",
+        "Extracurricular"
     ]
 
     fig = go.Figure()
+
     fig.add_trace(
+
         go.Scatterpolar(
+
             r=values + [values[0]],
-            theta=categories + [categories[0]],
+
+            theta=categories + [
+                categories[0]
+            ],
+
             fill="toself",
-            name="Daily Routine",
+
+            name="Daily Routine"
         )
     )
 
     fig.update_layout(
+
         template="plotly_dark",
+
         polar={
+
             "radialaxis": {
+
                 "visible": True,
-                "range": [0, 100],
+
+                "range": [
+                    0,
+                    100
+                ]
             }
         },
+
         showlegend=False,
+
         height=430,
-        margin={"l": 40, "r": 40, "t": 40, "b": 40},
+
+        margin={
+            "l": 40,
+            "r": 40,
+            "t": 40,
+            "b": 40
+        }
     )
+
     return fig
 
 
-def normalize_stress(stress):
-    value = str(stress).strip().lower()
-
-    if value in {"high", "3", "3.0"}:
-        return "High"
-
-    if value in {"medium", "moderate", "mid", "2", "2.0"}:
-        return "Medium"
-
-    if value in {"low", "1", "1.0"}:
-        return "Low"
-
-    return str(stress).title()
-
+# ============================================================
+# INSIGHTS
+# ============================================================
 
 def generate_insights(
-    study, sleep, social, physical, extra, stress, gpa
+    study,
+    sleep,
+    social,
+    physical,
+    extra,
+    stress
 ):
+
     insights = []
-    display_stress = normalize_stress(stress)
+
 
     if study < 3:
+
         insights.append(
-            "📚 Your reported study time is relatively low. "
-            "Consider protecting at least one focused study block each day."
-        )
-    elif study >= 6:
-        insights.append(
-            "📚 Your reported study commitment is strong. "
-            "Focus on consistency, revision and active practice."
+            "📚 Your study time is relatively low. "
+            "Consider adding one focused study block each day."
         )
 
-    if sleep < 6:
+    elif study >= 6:
+
         insights.append(
-            "😴 Your reported sleep duration is low. "
-            "A consistent sleep routine may help you manage your academic workload."
+            "📚 Your study commitment is strong. "
+            "Focus on consistency and active practice."
         )
-    elif sleep >= 7:
+
+
+    if sleep < 6:
+
         insights.append(
-            "😴 Your reported sleep duration is in a reasonable range. "
+            "😴 Your sleep duration is relatively low. "
+            "A consistent sleep routine can support academic performance."
+        )
+
+    elif sleep >= 7:
+
+        insights.append(
+            "😴 Your sleep duration is within a commonly recommended range. "
             "Try to maintain consistency."
         )
 
+
     if social > 5:
+
         insights.append(
-            "👥 A large portion of your reported day is allocated to social activity. "
-            "Protecting focused academic blocks may improve time management."
+            "👥 A significant amount of time is allocated "
+            "to social activity. Protect your focused study blocks."
         )
+
 
     if physical < 1:
+
         insights.append(
-            "🏃 Your reported physical activity is relatively low. "
-            "Consider including regular movement in your routine."
+            "🏃 Your physical activity is relatively low. "
+            "Consider adding regular movement to your routine."
         )
 
-    if display_stress == "High":
+
+    stress_lower = str(
+        stress
+    ).strip().lower()
+
+
+    if stress_lower == "high":
+
         insights.append(
             "🧠 You reported high stress. "
-            "Breaking large academic tasks into smaller steps may make your workload easier to manage."
+            "Breaking large academic tasks into smaller goals may help."
         )
-    elif display_stress == "Medium":
+
+    elif stress_lower == "medium":
+
         insights.append(
-            "🧠 Your reported stress is moderate. "
-            "Planning tasks in smaller blocks may help you stay organized."
+            "🧠 You reported moderate stress. "
+            "Planning tasks in smaller blocks may help."
         )
-    elif display_stress == "Low":
-        insights.append("🧠 Your reported stress level is low.")
+
+    elif stress_lower == "low":
+
+        insights.append(
+            "🧠 You reported low stress."
+        )
+
 
     if not insights:
+
         insights.append(
-            "✨ Your routine does not trigger a major warning from "
-            "the simple rule-based checks."
+            "✨ No major routine warning was detected "
+            "by the current rule-based checks."
         )
+
 
     return insights
 
 
-def generate_improvement_plan(
-    study, sleep, social, physical, extra, stress, gpa
+# ============================================================
+# IMPROVEMENT PLAN
+# ============================================================
+
+def generate_plan(
+    study,
+    sleep,
+    social,
+    physical,
+    extra,
+    stress,
+    gpa
 ):
-    tips = []
-    display_stress = normalize_stress(stress)
+
+    plan = []
+
 
     if study < 3:
-        tips.append((
-            "📚",
-            "Study Focus",
-            "Your current reported study time is relatively low. "
-            "Try adding one focused study session to your daily routine.",
-        ))
+
+        plan.append(
+            "📚 Gradually increase focused study time."
+        )
+
     elif study < 5:
-        tips.append((
-            "📚",
-            "Study Consistency",
-            "Build consistency with a fixed daily study schedule "
-            "and gradually improve the quality of your focused sessions.",
-        ))
+
+        plan.append(
+            "📚 Build a fixed daily study routine."
+        )
+
     else:
-        tips.append((
-            "📚",
-            "Study Strength",
-            "Your reported study commitment is strong. "
-            "Focus on consistency, revision and active practice.",
-        ))
+
+        plan.append(
+            "📚 Maintain your study consistency."
+        )
+
 
     if sleep < 6:
-        tips.append((
-            "😴",
-            "Sleep Routine",
-            "Your reported sleep duration is low. "
-            "Try to maintain a consistent sleep schedule and allow enough time for rest.",
-        ))
-    elif sleep >= 7:
-        tips.append((
-            "😴",
-            "Sleep Routine",
-            "Your reported sleep duration is in a reasonable range. "
-            "Try to keep your sleep schedule consistent.",
-        ))
 
-    if display_stress == "High":
-        tips.append((
-            "🧠",
-            "Stress Management",
-            "You reported high stress. Break difficult academic tasks "
-            "into smaller goals and use short recovery breaks.",
-        ))
-    elif display_stress == "Medium":
-        tips.append((
-            "🧠",
-            "Stress Management",
-            "Your reported stress level is moderate. "
-            "Planning your workload in smaller blocks may make studying easier to manage.",
-        ))
+        plan.append(
+            "😴 Work toward a more consistent sleep schedule."
+        )
+
 
     if physical < 1:
-        tips.append((
-            "🏃",
-            "Physical Activity",
-            "Your reported physical activity is relatively low. "
-            "Consider adding some regular movement to your daily routine.",
-        ))
+
+        plan.append(
+            "🏃 Add regular physical activity to your routine."
+        )
+
 
     if social > 5:
-        tips.append((
-            "📱",
-            "Time Management",
-            "A large part of your reported day is allocated to social activity. "
-            "Consider protecting specific hours for focused academic work.",
-        ))
 
-    if gpa < 5.5:
-        tips.append((
-            "🚀",
-            "Recovery Strategy",
-            "Do not try to change everything at once. Start with one or two "
-            "manageable habits, stay consistent, and review your progress each week.",
-        ))
-    elif gpa < 7:
-        tips.append((
-            "🎯",
-            "Improvement Strategy",
-            "Your model-estimated profile shows room for improvement. "
-            "Focus on consistency, planned study sessions and reducing avoidable distractions.",
-        ))
+        plan.append(
+            "📱 Review unnecessary social/distraction time."
+        )
+
+
+    if str(stress).strip().lower() == "high":
+
+        plan.append(
+            "🧠 Break large tasks into smaller goals "
+            "and use short recovery breaks."
+        )
+
+
+    if gpa < GPA_SCALE_MAX * 0.55:
+
+        plan.append(
+            "🚀 Start with one or two manageable habits "
+            "instead of changing everything at once."
+        )
+
+    elif gpa < GPA_SCALE_MAX * 0.70:
+
+        plan.append(
+            "🎯 Focus on consistency, revision "
+            "and reducing unnecessary distractions."
+        )
+
     else:
-        tips.append((
-            "🏆",
-            "Maintain Progress",
-            "Your model-estimated performance is relatively strong. "
-            "Focus on maintaining effective habits instead of overloading your routine.",
-        ))
 
-    return tips
+        plan.append(
+            "🏆 Maintain the habits that are already working."
+        )
 
+
+    return plan
+
+
+# ============================================================
+# FEATURE IMPORTANCE
+# ============================================================
 
 def get_feature_importance():
-    if not hasattr(model, "named_steps"):
+
+    if not hasattr(
+        model,
+        "named_steps"
+    ):
+
         return None
+
 
     steps = model.named_steps
 
-    # Prefer the step named "model", matching the original app.
-    if "model" in steps:
-        trained_model = steps["model"]
+
+    if "model" not in steps:
+
+        return None
+
+
+    trained_model = steps["model"]
+
+
+    # --------------------------------------------------------
+    # Tree models
+    # --------------------------------------------------------
+
+    if hasattr(
+        trained_model,
+        "feature_importances_"
+    ):
+
+        importance = np.asarray(
+            trained_model.feature_importances_
+        )
+
+
+    # --------------------------------------------------------
+    # Linear models
+    # --------------------------------------------------------
+
+    elif hasattr(
+        trained_model,
+        "coef_"
+    ):
+
+        importance = np.abs(
+            np.asarray(
+                trained_model.coef_
+            )
+        )
+
+
     else:
-        # Fallback: use the last pipeline step.
-        if not steps:
-            return None
-        trained_model = list(steps.values())[-1]
+
+        return None
+
+
+    importance = np.ravel(
+        importance
+    )
+
+
+    # --------------------------------------------------------
+    # Get transformed feature names
+    # --------------------------------------------------------
 
     feature_names = None
 
+
     if "preprocessor" in steps:
+
         try:
-            feature_names = steps["preprocessor"].get_feature_names_out()
+
+            feature_names = (
+                steps["preprocessor"]
+                .get_feature_names_out()
+            )
+
         except Exception:
+
             feature_names = None
 
-    if hasattr(trained_model, "feature_importances_"):
-        importance = np.asarray(trained_model.feature_importances_)
-    elif hasattr(trained_model, "coef_"):
-        importance = np.abs(np.asarray(trained_model.coef_))
-    else:
-        return None
-
-    importance = np.ravel(importance)
 
     if feature_names is None:
+
         feature_names = [
-            f"Feature {i + 1}" for i in range(len(importance))
+
+            f"Feature {i + 1}"
+
+            for i in range(
+                len(importance)
+            )
+
         ]
 
-    feature_names = list(feature_names)
 
-    if len(importance) != len(feature_names):
+    if len(feature_names) != len(importance):
+
         return None
 
-    return pd.DataFrame(
+
+    result = pd.DataFrame(
+
         {
             "Feature": feature_names,
-            "Importance": importance,
+
+            "Importance": importance
         }
+    )
+
+
+    return result.sort_values(
+        "Importance",
+        ascending=False
     )
 
 
@@ -746,57 +1039,78 @@ def get_feature_importance():
 # ============================================================
 
 with st.sidebar:
-    st.markdown(
-        '<div style="text-align:center"><div style="font-size:2.7rem;margin-bottom:.3rem">🧠</div><div style="font-size:1.35rem;font-weight:800">FocusGuard</div><div style="color:#94a3b8;font-size:.75rem">AI Student Intelligence</div></div>',
-        unsafe_allow_html=True,
+
+    st.title("🧠 FocusGuard")
+
+    st.caption(
+        "AI Student Intelligence"
     )
 
     st.divider()
 
+
     page = st.radio(
+
         "Navigation",
+
         [
             "🏠 Overview",
             "🎯 GPA Predictor",
             "🧪 What-If Lab",
             "📊 Student Analytics",
-            "🔬 AI Explanation",
-            "🤖 Model Intelligence",
-        ],
+            "🤖 AI Explanation",
+            "🧠 Model Intelligence",
+        ]
     )
+
 
     st.divider()
 
-    st.markdown("### 🤖 Current Model")
-    st.caption(model_info.get("model_name", "Unknown"))
+    st.subheader(
+        "Current Model"
+    )
+
+    st.write(
+        model_info.get(
+            "model_name",
+            "Unknown"
+        )
+    )
+
 
     col1, col2 = st.columns(2)
 
+
     with col1:
+
         st.metric(
             "R²",
-            f'{float(model_info.get("r2", 0)):.3f}',
+            f"{float(model_info.get('r2', 0)):.3f}"
         )
+
 
     with col2:
+
         st.metric(
             "RMSE",
-            f'{float(model_info.get("rmse", 0)):.3f}',
+            f"{float(model_info.get('rmse', 0)):.3f}"
         )
 
-    st.divider()
-    st.caption("FocusGuard AI")
-    st.caption("Student Performance Intelligence")
-
 
 # ============================================================
-# GLOBAL HEADER
+# HEADER
 # ============================================================
+
+st.title(
+    "🧠 FocusGuard AI"
+)
 
 st.markdown(
-    '<div class="hero-title">Focus<span class="gradient-text">Guard</span> AI</div><div class="hero-subtitle">Student Performance Intelligence &nbsp;•&nbsp; Predictive Analytics &nbsp;•&nbsp; Personalized Insights</div>',
-    unsafe_allow_html=True,
+    "**Student Performance Intelligence** • "
+    "Predictive Analytics • Personalized Insights"
 )
+
+st.divider()
 
 
 # ============================================================
@@ -804,77 +1118,127 @@ st.markdown(
 # ============================================================
 
 if page == "🏠 Overview":
-    st.markdown(
-        '<div class="section-title">📡 System Overview</div>',
-        unsafe_allow_html=True,
+
+    st.header(
+        "🎓 System Overview"
     )
+
 
     col1, col2, col3, col4 = st.columns(4)
 
+
     with col1:
-        render_card("Students", f"{len(df):,}")
+
+        st.metric(
+            "Students",
+            f"{len(df):,}"
+        )
+
 
     with col2:
-        render_card("Average GPA", f'{df["GPA"].mean():.2f}')
+
+        st.metric(
+            "Average GPA",
+            f"{df['GPA'].mean():.2f}"
+        )
+
 
     with col3:
-        render_card(
+
+        st.metric(
             "Model R²",
-            f'{float(model_info.get("r2", 0)):.3f}',
+            f"{float(model_info.get('r2', 0)):.3f}"
         )
+
 
     with col4:
-        render_card(
+
+        st.metric(
             "ML Model",
-            str(model_info.get("model_name", "Unknown")),
-            "font-size:1.05rem;",
+            model_info.get(
+                "model_name",
+                "ML Model"
+            )
         )
 
-    st.markdown(
-        '<div class="section-title">🧠 How FocusGuard Works</div>',
-        unsafe_allow_html=True,
+
+    st.subheader(
+        "⚙️ How FocusGuard Works"
     )
 
-    flow_columns = st.columns(5)
 
-    flow_items = [
-        ("👤", "Student Habits", "Daily routine and lifestyle data"),
-        ("🧹", "Data Processing", "Cleaning and feature engineering"),
-        ("🤖", "ML Model", "Machine learning prediction"),
-        ("🎯", "Prediction", "Estimated academic performance"),
-        ("💡", "Insights", "Explore routine patterns"),
-    ]
+    c1, c2, c3, c4, c5 = st.columns(5)
 
-    for column, item in zip(flow_columns, flow_items):
-        with column:
-            render_flow_card(*item)
 
-    st.markdown(
-        '<div class="section-title">✨ Explore FocusGuard</div>',
-        unsafe_allow_html=True,
+    with c1:
+
+        st.info(
+            "👤 **Student Habits**\n\n"
+            "Daily routine and lifestyle data."
+        )
+
+
+    with c2:
+
+        st.info(
+            "🧹 **Data Processing**\n\n"
+            "Cleaning and feature engineering."
+        )
+
+
+    with c3:
+
+        st.info(
+            "🤖 **ML Model**\n\n"
+            "Machine learning prediction."
+        )
+
+
+    with c4:
+
+        st.info(
+            "🎯 **Prediction**\n\n"
+            "Estimated academic performance."
+        )
+
+
+    with c5:
+
+        st.info(
+            "💡 **Insights**\n\n"
+            "Explore routine patterns."
+        )
+
+
+    st.subheader(
+        "✨ Explore FocusGuard"
     )
 
-    col1, col2, col3 = st.columns(3)
 
-    with col1:
-        render_flow_card(
-            "🎯",
-            "GPA Predictor",
-            "Enter a student's routine and generate an ML-based GPA estimate.",
+    c1, c2, c3 = st.columns(3)
+
+
+    with c1:
+
+        st.success(
+            "🎯 **GPA Predictor**\n\n"
+            "Estimate GPA from student habits."
         )
 
-    with col2:
-        render_flow_card(
-            "🧪",
-            "What-If Lab",
-            "Compare a current routine with an alternative simulated routine.",
+
+    with c2:
+
+        st.warning(
+            "🧪 **What-If Lab**\n\n"
+            "Experiment with different routines."
         )
 
-    with col3:
-        render_flow_card(
-            "🔬",
-            "AI Explanation",
-            "Explore which features the trained model relies on most.",
+
+    with c3:
+
+        st.info(
+            "📊 **Student Analytics**\n\n"
+            "Explore dataset patterns."
         )
 
 
@@ -883,246 +1247,198 @@ if page == "🏠 Overview":
 # ============================================================
 
 elif page == "🎯 GPA Predictor":
-    st.markdown(
-        '<div class="section-title">🎯 GPA Predictor</div>',
-        unsafe_allow_html=True,
+
+    st.header(
+        "🎯 GPA Predictor"
     )
-    st.caption("Enter a student's typical daily routine.")
 
-    col1, col2 = st.columns(2)
+    st.write(
+        "Enter a daily routine and let the trained ML model "
+        "estimate GPA."
+    )
 
-    with col1:
-        study_hours = st.slider(
-            "📚 Study Hours / Day", 0.0, 12.0, 5.0, 0.5
+
+    left, right = st.columns(2)
+
+
+    with left:
+
+        study = st.slider(
+            "📚 Study Hours / Day",
+            0.0,
+            12.0,
+            4.0,
+            0.5
         )
 
-        sleep_hours = st.slider(
-            "😴 Sleep Hours / Day", 0.0, 12.0, 7.0, 0.5
+
+        extra = st.slider(
+            "🎨 Extracurricular Hours / Day",
+            0.0,
+            8.0,
+            1.0,
+            0.5
         )
 
-        extracurricular_hours = st.slider(
-            "🎨 Extracurricular Hours / Day", 0.0, 8.0, 2.0, 0.5
+
+        sleep = st.slider(
+            "😴 Sleep Hours / Day",
+            0.0,
+            12.0,
+            7.0,
+            0.5
         )
 
-    with col2:
-        social_hours = st.slider(
-            "👥 Social Hours / Day", 0.0, 10.0, 2.0, 0.5
+
+    with right:
+
+        social = st.slider(
+            "👥 Social Hours / Day",
+            0.0,
+            10.0,
+            2.0,
+            0.5
         )
 
-        physical_hours = st.slider(
-            "🏃 Physical Activity / Day", 0.0, 8.0, 1.0, 0.5
+
+        physical = st.slider(
+            "🏃 Physical Activity Hours / Day",
+            0.0,
+            8.0,
+            1.0,
+            0.5
         )
 
-        stress_options = (
-            df["Stress_Level"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
 
-        if not stress_options:
-            stress_options = ["Low", "Medium", "High"]
-
-        stress_level = st.selectbox(
+        stress = st.selectbox(
             "🧠 Stress Level",
-            stress_options,
+            STRESS_OPTIONS
         )
 
-    current_total = total_daily_hours(
-        study_hours,
-        extracurricular_hours,
-        sleep_hours,
-        social_hours,
-        physical_hours,
+
+    total = total_daily_hours(
+        study,
+        extra,
+        sleep,
+        social,
+        physical
     )
 
-    if current_total > 24:
+
+    st.caption(
+        f"Total tracked time: **{total:.1f} / 24 hours**"
+    )
+
+
+    if total > 24:
+
         st.error(
-            f"⚠️ Your routine adds up to {current_total:.1f} hours/day. "
-            "Please reduce the selected hours."
+            "Your routine exceeds 24 hours."
         )
+
+
     else:
-        remaining = 24 - current_total
-        st.caption(
-            f"Daily tracked time: {current_total:.1f} / 24 hours "
-            f"• Untracked time: {remaining:.1f} hours"
-        )
 
-    if st.button("🚀 ANALYZE MY ROUTINE"):
-        if current_total > 24:
-            st.error("Please create a valid 24-hour daily routine first.")
-        else:
+        if st.button(
+            "🚀 Predict GPA",
+            type="primary"
+        ):
+
             try:
+
                 prediction = predict_gpa(
-                    study_hours,
-                    extracurricular_hours,
-                    sleep_hours,
-                    social_hours,
-                    physical_hours,
-                    stress_level,
+                    study,
+                    extra,
+                    sleep,
+                    social,
+                    physical,
+                    stress
                 )
-            except Exception as exc:
-                st.error(str(exc))
-            else:
-                status, icon = get_status(prediction)
 
-                left, right = st.columns([1, 1])
 
-                with left:
-                    st.markdown(
-                        f'<div class="prediction-box"><div class="kpi-label">ML-BASED GPA ESTIMATE</div><div class="prediction-value">{prediction:.2f}</div><h3>{icon} {status}</h3><p style="color:#94a3b8">This is a model estimate based on the provided routine and learned patterns in the training data.</p></div>',
-                        unsafe_allow_html=True,
+                status, icon = get_status(
+                    prediction
+                )
+
+
+                st.divider()
+
+
+                c1, c2 = st.columns(2)
+
+
+                with c1:
+
+                    st.metric(
+                        "Predicted GPA",
+                        f"{prediction:.2f} / {GPA_SCALE_MAX:g}"
                     )
 
-                with right:
+
+                    st.success(
+                        f"{icon} {status}"
+                    )
+
+
+                with c2:
+
                     st.plotly_chart(
-                        create_gauge(prediction),
-                        use_container_width=True,
+                        create_gauge(
+                            prediction
+                        ),
+                        use_container_width=True
                     )
 
-                st.markdown(
-                    '<div class="section-title">🧠 Smart Routine Insights</div>',
-                    unsafe_allow_html=True,
+
+                st.subheader(
+                    "💡 Personalized Insights"
                 )
 
-                for insight in generate_insights(
-                    study_hours,
-                    sleep_hours,
-                    social_hours,
-                    physical_hours,
-                    extracurricular_hours,
-                    stress_level,
-                    prediction,
-                ):
-                    render_insight(insight)
 
-                st.markdown(
-                    '<div class="section-title">🎯 Personalized Improvement Plan</div>',
-                    unsafe_allow_html=True,
+                insights = generate_insights(
+                    study,
+                    sleep,
+                    social,
+                    physical,
+                    extra,
+                    stress
                 )
 
-                st.caption(
-                    "Suggestions are based on the routine entered above. "
-                    "They are general guidance, not guaranteed ways to increase GPA."
-                )
 
-                for icon_text, title, text in generate_improvement_plan(
-                    study_hours,
-                    sleep_hours,
-                    social_hours,
-                    physical_hours,
-                    extracurricular_hours,
-                    stress_level,
-                    prediction,
-                ):
-                    render_improvement(icon_text, title, text)
+                for insight in insights:
 
-                st.markdown(
-                    '<div class="section-title">📅 7-Day Action Plan</div>',
-                    unsafe_allow_html=True,
-                )
-                st.caption(
-                    "A simple plan for turning the insights into consistent habits."
-                )
-
-                action_plan = [
-                    ("Day 1", "📚", "Focused Study", "Complete one distraction-free study session."),
-                    ("Day 2", "😴", "Sleep Routine", "Maintain a consistent sleep and wake schedule."),
-                    ("Day 3", "🧠", "Stress Management", "Break one difficult academic task into smaller steps."),
-                    ("Day 4", "🏃", "Physical Activity", "Include some regular movement in your day."),
-                    ("Day 5", "📱", "Distraction Control", "Protect one study block from unnecessary distractions."),
-                    ("Day 6", "🔄", "Weekly Review", "Review what worked and what made studying difficult."),
-                    ("Day 7", "🎯", "Next Week Planning", "Set realistic study targets for the coming week."),
-                ]
-
-                for day, action_icon, title, description in action_plan:
-                    st.markdown(
-                        f'<div class="improvement-card"><div style="display:flex;align-items:center;gap:15px"><div class="day-number">{day}</div><div style="font-size:1.35rem">{action_icon}</div><div><div class="day-title">{title}</div><div class="day-description">{description}</div></div></div></div>',
-                        unsafe_allow_html=True,
+                    st.info(
+                        insight
                     )
 
-                st.markdown(
-                    '<div class="section-title">📊 Your Routine Distribution</div>',
-                    unsafe_allow_html=True,
-                )
-                st.caption(
-                    "This chart shows how your reported daily routine is distributed. "
-                    "Higher values do not necessarily mean better performance."
+
+                st.subheader(
+                    "🚀 Improvement Plan"
                 )
 
-                st.plotly_chart(
-                    create_radar(
-                        study_hours,
-                        sleep_hours,
-                        social_hours,
-                        physical_hours,
-                        extracurricular_hours,
-                    ),
-                    use_container_width=True,
+
+                plan = generate_plan(
+                    study,
+                    sleep,
+                    social,
+                    physical,
+                    extra,
+                    stress,
+                    prediction
                 )
 
-                report = f"""FOCUSGUARD AI
-Student Performance Intelligence Report
-========================================
 
-Predicted GPA:
-{prediction:.2f}
+                for item in plan:
 
-Performance Status:
-{icon} {status}
+                    st.write(
+                        f"• {item}"
+                    )
 
-DAILY ROUTINE
--------------
 
-Study Hours:
-{study_hours}
+            except Exception as e:
 
-Sleep Hours:
-{sleep_hours}
-
-Social Hours:
-{social_hours}
-
-Physical Activity:
-{physical_hours}
-
-Extracurricular Hours:
-{extracurricular_hours}
-
-Stress Level:
-{stress_level}
-
-Total Tracked Hours:
-{current_total:.1f}
-
-MODEL
------
-
-Model:
-{model_info.get("model_name", "Unknown")}
-
-R²:
-{float(model_info.get("r2", 0)):.4f}
-
-RMSE:
-{float(model_info.get("rmse", 0)):.4f}
-
-MAE:
-{float(model_info.get("mae", 0)):.4f}
-
-IMPORTANT
----------
-
-This report contains an ML-based estimate.
-It does not guarantee a student's future GPA.
-Model associations should not be interpreted as causal effects.
-"""
-
-                st.download_button(
-                    "📄 Download Prediction Report",
-                    report,
-                    file_name="focusguard_prediction_report.txt",
-                    mime="text/plain",
+                st.error(
+                    f"Prediction failed:\n\n{e}"
                 )
 
 
@@ -1131,165 +1447,241 @@ Model associations should not be interpreted as causal effects.
 # ============================================================
 
 elif page == "🧪 What-If Lab":
-    st.markdown(
-        '<div class="section-title">🧪 Before → After What-If Lab</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption(
-        "Compare two hypothetical routines and see how the model's estimate changes."
+
+    st.header(
+        "🧪 What-If Lab"
     )
 
-    st.markdown("### 👤 Current Routine")
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-        base_study = st.slider(
-            "📚 Study Hours", 0.0, 12.0, 5.0, 0.5, key="base_study"
-        )
-        base_sleep = st.slider(
-            "😴 Sleep Hours", 0.0, 12.0, 7.0, 0.5, key="base_sleep"
-        )
-        base_social = st.slider(
-            "👥 Social Hours", 0.0, 10.0, 2.0, 0.5, key="base_social"
-        )
-
-    with c2:
-        base_physical = st.slider(
-            "🏃 Physical Activity", 0.0, 8.0, 1.0, 0.5, key="base_physical"
-        )
-        base_extra = st.slider(
-            "🎨 Extracurricular", 0.0, 8.0, 2.0, 0.5, key="base_extra"
-        )
-
-        stress_options = (
-            df["Stress_Level"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        if not stress_options:
-            stress_options = ["Low", "Medium", "High"]
-
-        base_stress = st.selectbox(
-            "🧠 Stress Level",
-            stress_options,
-            key="base_stress",
-        )
-
-    baseline_total = total_daily_hours(
-        base_study, base_extra, base_sleep, base_social, base_physical
+    st.write(
+        "Compare two daily routines and see how "
+        "the model prediction changes."
     )
 
-    st.divider()
-    st.markdown("### 🚀 Alternative Routine")
 
-    c3, c4 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with c3:
-        new_study = st.slider(
-            "📚 New Study Hours", 0.0, 12.0, 6.0, 0.5, key="new_study"
-        )
-        new_sleep = st.slider(
-            "😴 New Sleep Hours", 0.0, 12.0, 7.0, 0.5, key="new_sleep"
-        )
-        new_social = st.slider(
-            "👥 New Social Hours", 0.0, 10.0, 2.0, 0.5, key="new_social"
+
+    # ========================================================
+    # ROUTINE A
+    # ========================================================
+
+    with col1:
+
+        st.subheader(
+            "Routine A"
         )
 
-    with c4:
-        new_physical = st.slider(
-            "🏃 New Physical Activity", 0.0, 8.0, 1.5, 0.5, key="new_physical"
-        )
-        new_extra = st.slider(
-            "🎨 New Extracurricular", 0.0, 8.0, 2.0, 0.5, key="new_extra"
-        )
-        new_stress = st.selectbox(
-            "🧠 New Stress Level",
-            stress_options,
-            key="new_stress",
+
+        a_study = st.slider(
+            "Study A",
+            0.0,
+            12.0,
+            3.0,
+            0.5
         )
 
-    alternative_total = total_daily_hours(
-        new_study, new_extra, new_sleep, new_social, new_physical
-    )
 
-    if baseline_total > 24:
-        st.error(f"⚠️ Current routine totals {baseline_total:.1f} hours/day.")
-    elif alternative_total > 24:
-        st.error(
-            f"⚠️ Alternative routine totals {alternative_total:.1f} hours/day."
+        a_sleep = st.slider(
+            "Sleep A",
+            0.0,
+            12.0,
+            6.0,
+            0.5
         )
-    else:
-        try:
-            baseline_gpa = predict_gpa(
-                base_study,
-                base_extra,
-                base_sleep,
-                base_social,
-                base_physical,
-                base_stress,
+
+
+        a_social = st.slider(
+            "Social A",
+            0.0,
+            10.0,
+            3.0,
+            0.5
+        )
+
+
+        a_physical = st.slider(
+            "Physical A",
+            0.0,
+            8.0,
+            1.0,
+            0.5
+        )
+
+
+        a_extra = st.slider(
+            "Extra A",
+            0.0,
+            8.0,
+            1.0,
+            0.5
+        )
+
+
+        a_stress = st.selectbox(
+            "Stress A",
+            STRESS_OPTIONS,
+            key="stress_a"
+        )
+
+
+    # ========================================================
+    # ROUTINE B
+    # ========================================================
+
+    with col2:
+
+        st.subheader(
+            "Routine B"
+        )
+
+
+        b_study = st.slider(
+            "Study B",
+            0.0,
+            12.0,
+            6.0,
+            0.5
+        )
+
+
+        b_sleep = st.slider(
+            "Sleep B",
+            0.0,
+            12.0,
+            7.0,
+            0.5
+        )
+
+
+        b_social = st.slider(
+            "Social B",
+            0.0,
+            10.0,
+            2.0,
+            0.5
+        )
+
+
+        b_physical = st.slider(
+            "Physical B",
+            0.0,
+            8.0,
+            1.0,
+            0.5
+        )
+
+
+        b_extra = st.slider(
+            "Extra B",
+            0.0,
+            8.0,
+            1.0,
+            0.5
+        )
+
+
+        b_stress = st.selectbox(
+            "Stress B",
+            STRESS_OPTIONS,
+            key="stress_b"
+        )
+
+
+    if st.button(
+        "🔬 Compare Routines",
+        type="primary"
+    ):
+
+        total_a = total_daily_hours(
+            a_study,
+            a_extra,
+            a_sleep,
+            a_social,
+            a_physical
+        )
+
+
+        total_b = total_daily_hours(
+            b_study,
+            b_extra,
+            b_sleep,
+            b_social,
+            b_physical
+        )
+
+
+        if total_a > 24 or total_b > 24:
+
+            st.error(
+                "One of the routines exceeds 24 hours."
             )
-            new_gpa = predict_gpa(
-                new_study,
-                new_extra,
-                new_sleep,
-                new_social,
-                new_physical,
-                new_stress,
-            )
 
-            difference = new_gpa - baseline_gpa
 
-            st.markdown(
-                '<div class="section-title">📈 Simulation Result</div>',
-                unsafe_allow_html=True,
-            )
+        else:
 
-            col1, col2, col3 = st.columns(3)
+            try:
 
-            with col1:
-                st.metric("Current Estimate", f"{baseline_gpa:.2f}")
-
-            with col2:
-                st.metric("Alternative Estimate", f"{new_gpa:.2f}")
-
-            with col3:
-                st.metric("Model Difference", f"{difference:+.2f}")
-
-            comparison_df = pd.DataFrame(
-                {
-                    "Routine": ["Current", "Alternative"],
-                    "Estimated GPA": [baseline_gpa, new_gpa],
-                }
-            )
-
-            fig = go.Figure(
-                go.Bar(
-                    x=comparison_df["Routine"],
-                    y=comparison_df["Estimated GPA"],
-                    text=[f"{x:.2f}" for x in comparison_df["Estimated GPA"]],
-                    textposition="outside",
+                gpa_a = predict_gpa(
+                    a_study,
+                    a_extra,
+                    a_sleep,
+                    a_social,
+                    a_physical,
+                    a_stress
                 )
-            )
 
-            fig.update_layout(
-                template="plotly_dark",
-                title="Current vs Alternative Routine",
-                yaxis_title="Estimated GPA",
-                yaxis_range=[0, 10],
-                height=430,
-            )
 
-            st.plotly_chart(fig, use_container_width=True)
+                gpa_b = predict_gpa(
+                    b_study,
+                    b_extra,
+                    b_sleep,
+                    b_social,
+                    b_physical,
+                    b_stress
+                )
 
-            st.info(
-                "⚠️ This is a what-if model simulation. The difference is not "
-                "proof that changing a single habit will causally change GPA."
-            )
 
-        except Exception as exc:
-            st.error(f"❌ Prediction error: {exc}")
+                c1, c2, c3 = st.columns(3)
+
+
+                with c1:
+
+                    st.metric(
+                        "Routine A",
+                        f"{gpa_a:.2f}"
+                    )
+
+
+                with c2:
+
+                    st.metric(
+                        "Routine B",
+                        f"{gpa_b:.2f}"
+                    )
+
+
+                with c3:
+
+                    difference = gpa_b - gpa_a
+
+                    st.metric(
+                        "Prediction Difference",
+                        f"{difference:+.2f}"
+                    )
+
+
+                st.info(
+                    "This comparison shows a difference in "
+                    "model predictions. It does not prove that "
+                    "changing a habit will cause the predicted GPA change."
+                )
+
+
+            except Exception as e:
+
+                st.error(
+                    f"Comparison failed:\n\n{e}"
+                )
 
 
 # ============================================================
@@ -1297,111 +1689,226 @@ elif page == "🧪 What-If Lab":
 # ============================================================
 
 elif page == "📊 Student Analytics":
-    st.markdown(
-        '<div class="section-title">📊 Student Population Analytics</div>',
-        unsafe_allow_html=True,
+
+    st.header(
+        "📊 Student Analytics"
     )
 
-    col1, col2 = st.columns(2)
+    st.write(
+        "Explore relationships between student habits and GPA."
+    )
 
-    with col1:
-        fig = go.Figure(
-            go.Histogram(
-                x=df["GPA"],
-                nbinsx=20,
-            )
+
+    # --------------------------------------------------------
+    # GPA Distribution
+    # --------------------------------------------------------
+
+    st.subheader(
+        "📈 GPA Distribution"
+    )
+
+
+    fig_gpa = go.Figure()
+
+
+    fig_gpa.add_trace(
+
+        go.Histogram(
+
+            x=df["GPA"],
+
+            nbinsx=20,
+
+            name="GPA"
+        )
+    )
+
+
+    fig_gpa.update_layout(
+
+        template="plotly_dark",
+
+        xaxis_title="GPA",
+
+        yaxis_title="Number of Students",
+
+        height=400
+    )
+
+
+    st.plotly_chart(
+        fig_gpa,
+        use_container_width=True
+    )
+
+
+    # --------------------------------------------------------
+    # Study vs GPA
+    # --------------------------------------------------------
+
+    c1, c2 = st.columns(2)
+
+
+    with c1:
+
+        st.subheader(
+            "Study Hours vs GPA"
         )
 
-        fig.update_layout(
-            template="plotly_dark",
-            title="GPA Distribution",
-            xaxis_title="GPA",
-            yaxis_title="Students",
-        )
 
-        st.plotly_chart(fig, use_container_width=True)
+        fig1 = go.Figure()
 
-    with col2:
-        fig = go.Figure(
+
+        fig1.add_trace(
+
             go.Scatter(
+
                 x=df["Study_Hours_Per_Day"],
+
                 y=df["GPA"],
+
                 mode="markers",
-                opacity=0.65,
+
+                name="Students"
             )
         )
 
-        fig.update_layout(
+
+        fig1.update_layout(
+
             template="plotly_dark",
-            title="Study Hours vs GPA",
+
             xaxis_title="Study Hours / Day",
+
             yaxis_title="GPA",
+
+            height=400
         )
 
-        st.plotly_chart(fig, use_container_width=True)
 
-    stress_gpa = (
-        df.groupby("Stress_Level")["GPA"]
-        .mean()
-        .reset_index()
-    )
-
-    fig = go.Figure(
-        go.Bar(
-            x=stress_gpa["Stress_Level"],
-            y=stress_gpa["GPA"],
-            text=[f"{x:.2f}" for x in stress_gpa["GPA"]],
-            textposition="outside",
+        st.plotly_chart(
+            fig1,
+            use_container_width=True
         )
+
+
+    # --------------------------------------------------------
+    # Sleep vs GPA
+    # --------------------------------------------------------
+
+    with c2:
+
+        st.subheader(
+            "Sleep Hours vs GPA"
+        )
+
+
+        fig2 = go.Figure()
+
+
+        fig2.add_trace(
+
+            go.Scatter(
+
+                x=df["Sleep_Hours_Per_Day"],
+
+                y=df["GPA"],
+
+                mode="markers",
+
+                name="Students"
+            )
+        )
+
+
+        fig2.update_layout(
+
+            template="plotly_dark",
+
+            xaxis_title="Sleep Hours / Day",
+
+            yaxis_title="GPA",
+
+            height=400
+        )
+
+
+        st.plotly_chart(
+            fig2,
+            use_container_width=True
+        )
+
+
+    # --------------------------------------------------------
+    # Correlation
+    # --------------------------------------------------------
+
+    st.subheader(
+        "🔗 Feature Correlation"
     )
 
-    fig.update_layout(
-        template="plotly_dark",
-        title="Average GPA by Stress Level",
-        xaxis_title="Stress Level",
-        yaxis_title="Average GPA",
-    )
 
-    st.plotly_chart(fig, use_container_width=True)
+    numeric_columns = df.select_dtypes(
+        include=np.number
+    ).columns
 
-    st.caption(
-        "These charts show patterns in the dataset. "
-        "They do not establish causal relationships."
-    )
 
-    st.markdown(
-        '<div class="section-title">🔗 Feature Relationships</div>',
-        unsafe_allow_html=True,
-    )
+    correlation = df[
+        numeric_columns
+    ].corr()
 
-    numerical_data = df.select_dtypes(include=np.number)
-    correlation = numerical_data.corr()
 
-    fig = go.Figure(
+    fig_corr = go.Figure()
+
+
+    fig_corr.add_trace(
+
         go.Heatmap(
+
             z=correlation.values,
+
             x=correlation.columns,
+
             y=correlation.columns,
+
+            text=np.round(
+                correlation.values,
+                2
+            ),
+
+            texttemplate="%{text}",
+
+            colorscale="Viridis"
         )
     )
 
-    fig.update_layout(
+
+    fig_corr.update_layout(
+
         template="plotly_dark",
-        title="Correlation Matrix",
-        height=650,
+
+        height=600
     )
 
-    st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown(
-        '<div class="section-title">🔎 Dataset Preview</div>',
-        unsafe_allow_html=True,
+    st.plotly_chart(
+        fig_corr,
+        use_container_width=True
     )
+
+
+    # --------------------------------------------------------
+    # Dataset Preview
+    # --------------------------------------------------------
+
+    st.subheader(
+        "📋 Dataset Preview"
+    )
+
 
     st.dataframe(
-        df.head(25),
-        use_container_width=True,
-        hide_index=True,
+        df.head(20),
+        use_container_width=True
     )
 
 
@@ -1409,59 +1916,116 @@ elif page == "📊 Student Analytics":
 # AI EXPLANATION
 # ============================================================
 
-elif page == "🔬 AI Explanation":
-    st.markdown(
-        '<div class="section-title">🔬 Why Does the Model Predict This?</div>',
-        unsafe_allow_html=True,
+elif page == "🤖 AI Explanation":
+
+    st.header(
+        "🤖 AI Explanation"
     )
 
-    st.caption(
-        "Feature importance shows which signals the trained model relied on most."
+
+    st.write(
+        "FocusGuard combines machine-learning prediction "
+        "with simple rule-based explanations."
     )
 
-    importance_df = get_feature_importance()
-
-    if importance_df is None:
-        st.warning(
-            "⚠️ Feature importance is not available for the current model configuration."
-        )
-        st.info(
-            "This can happen when the saved model is not a Pipeline or "
-            "the underlying estimator does not expose feature importance or coefficients."
-        )
-    else:
-        importance_df = (
-            importance_df
-            .sort_values("Importance", ascending=True)
-            .tail(10)
-        )
-
-        fig = go.Figure(
-            go.Bar(
-                x=importance_df["Importance"],
-                y=importance_df["Feature"],
-                orientation="h",
-            )
-        )
-
-        fig.update_layout(
-            template="plotly_dark",
-            title="Top Predictive Signals",
-            xaxis_title="Model Importance",
-            yaxis_title="Feature",
-            height=500,
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        top_feature = importance_df.iloc[-1]["Feature"]
-
-        st.success(f"💡 **Top model signal:** {top_feature}")
 
     st.info(
-        "Important: feature importance describes how much the trained model "
-        "relied on a feature. It does not prove that changing that feature "
-        "will causally change GPA."
+        """
+        **How the system works**
+
+        1. Student provides daily routine information.
+        2. Input data is converted into model features.
+        3. The trained ML model predicts GPA.
+        4. Rule-based logic identifies possible improvement areas.
+        5. The system provides personalized suggestions.
+        """
+    )
+
+
+    st.subheader(
+        "Model Information"
+    )
+
+
+    info_df = pd.DataFrame(
+
+        {
+            "Metric": [
+
+                "Model",
+
+                "Target",
+
+                "Training Samples",
+
+                "Testing Samples",
+
+                "MAE",
+
+                "RMSE",
+
+                "R²"
+
+            ],
+
+            "Value": [
+
+                model_info.get(
+                    "model_name",
+                    "Unknown"
+                ),
+
+                model_info.get(
+                    "target",
+                    "GPA"
+                ),
+
+                model_info.get(
+                    "training_samples",
+                    0
+                ),
+
+                model_info.get(
+                    "testing_samples",
+                    0
+                ),
+
+                model_info.get(
+                    "mae",
+                    0
+                ),
+
+                model_info.get(
+                    "rmse",
+                    0
+                ),
+
+                model_info.get(
+                    "r2",
+                    0
+                )
+
+            ]
+        }
+    )
+
+
+    st.dataframe(
+        info_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+
+    st.subheader(
+        "⚠️ Responsible Interpretation"
+    )
+
+
+    st.warning(
+        "The GPA prediction is an estimate based on patterns "
+        "learned from the training dataset. It does not establish "
+        "that a specific lifestyle habit directly causes a change in GPA."
     )
 
 
@@ -1469,106 +2033,150 @@ elif page == "🔬 AI Explanation":
 # MODEL INTELLIGENCE
 # ============================================================
 
-elif page == "🤖 Model Intelligence":
-    st.markdown(
-        '<div class="section-title">🤖 Model Intelligence</div>',
-        unsafe_allow_html=True,
+elif page == "🧠 Model Intelligence":
+
+    st.header(
+        "🧠 Model Intelligence"
     )
 
-    st.caption(
-        "Technical performance of the machine learning system."
+
+    importance_df = get_feature_importance()
+
+
+    if importance_df is None:
+
+        st.warning(
+            "Feature importance is not available for this model."
+        )
+
+
+    else:
+
+        st.subheader(
+            "Feature Importance"
+        )
+
+
+        fig = go.Figure()
+
+
+        fig.add_trace(
+
+            go.Bar(
+
+                x=importance_df["Importance"],
+
+                y=importance_df["Feature"],
+
+                orientation="h"
+            )
+        )
+
+
+        fig.update_layout(
+
+            template="plotly_dark",
+
+            height=500,
+
+            xaxis_title="Importance",
+
+            yaxis_title="Feature"
+        )
+
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+
+        st.dataframe(
+
+            importance_df,
+
+            use_container_width=True,
+
+            hide_index=True
+        )
+
+
+    # --------------------------------------------------------
+    # Model Performance
+    # --------------------------------------------------------
+
+    st.subheader(
+        "📌 Model Performance"
     )
 
-    col1, col2, col3, col4 = st.columns(4)
 
-    with col1:
+    c1, c2, c3 = st.columns(3)
+
+
+    with c1:
+
         st.metric(
-            "Model",
-            str(model_info.get("model_name", "Unknown")),
+            "R²",
+            f"{float(model_info.get('r2', 0)):.3f}"
         )
 
-    with col2:
-        st.metric(
-            "R² Score",
-            f'{float(model_info.get("r2", 0)):.4f}',
-        )
 
-    with col3:
+    with c2:
+
         st.metric(
             "RMSE",
-            f'{float(model_info.get("rmse", 0)):.4f}',
+            f"{float(model_info.get('rmse', 0)):.3f}"
         )
 
-    with col4:
+
+    with c3:
+
         st.metric(
             "MAE",
-            f'{float(model_info.get("mae", 0)):.4f}',
+            f"{float(model_info.get('mae', 0)):.3f}"
         )
 
-    st.markdown(
-        '<div class="section-title">📚 Training Information</div>',
-        unsafe_allow_html=True,
+
+    # --------------------------------------------------------
+    # Pipeline Information
+    # --------------------------------------------------------
+
+    st.subheader(
+        "⚙️ Pipeline Structure"
     )
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        render_card(
-            "Training Samples",
-            f'{int(model_info.get("training_samples", 0)):,}',
-        )
-
-    with col2:
-        render_card(
-            "Testing Samples",
-            f'{int(model_info.get("testing_samples", 0)):,}',
-        )
-
-    with col3:
-        render_card(
-            "Prediction Target",
-            str(model_info.get("target", "GPA")),
-        )
-
-    st.markdown(
-        '<div class="section-title">📖 How to Read These Metrics</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        '<div class="glass-card"><h4>R² Score</h4><p style="color:#94a3b8">Indicates how much variation in GPA is explained by the model. Higher is generally better.</p><h4>RMSE</h4><p style="color:#94a3b8">Measures prediction error while giving larger errors more weight. Lower is better.</p><h4>MAE</h4><p style="color:#94a3b8">Measures the average absolute prediction error. Lower is better.</p></div>',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        '<div class="section-title">🔧 Model Structure</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.code(str(type(model)))
 
     if hasattr(model, "named_steps"):
-        st.success("✅ The saved model is a Scikit-learn Pipeline.")
-        st.write("Pipeline steps:", list(model.named_steps.keys()))
+
+        st.success(
+            "The saved model is a Scikit-learn Pipeline."
+        )
+
+
+        st.write(
+            "Pipeline steps:"
+        )
+
+
+        for step_name in model.named_steps:
+
+            st.code(
+                step_name
+            )
+
     else:
-        st.warning("⚠️ The saved model is not a Pipeline.")
 
-    st.markdown(
-        '<div class="section-title">⚠️ Responsible Interpretation</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.warning(
-        "FocusGuard is a predictive analytics project. Its predictions "
-        "should not be treated as guaranteed future GPA values or causal conclusions."
-    )
+        st.warning(
+            "The saved model is not a Scikit-learn Pipeline."
+        )
 
 
 # ============================================================
 # FOOTER
 # ============================================================
 
-st.markdown(
-    '<div class="footer"><b>FocusGuard AI</b><br>Student Performance Intelligence<br><br>Python • Pandas • Scikit-learn • Plotly • Streamlit</div>',
-    unsafe_allow_html=True,
+st.divider()
+
+st.caption(
+    "🧠 FocusGuard AI • Student Performance Intelligence System"
 )
